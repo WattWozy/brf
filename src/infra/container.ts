@@ -6,6 +6,7 @@ import {
   bidRepository,
   bookingRepository,
   brfRepository,
+  businessRepository,
   documentRepository,
   issueRepository,
   jobRepository,
@@ -26,6 +27,7 @@ export function getContext(): UseCaseContext {
     bookings: bookingRepository(),
     posts: postRepository(),
     documents: documentRepository(),
+    businesses: businessRepository(),
     hasher: passwordHasher,
     tokens: tokenGenerator,
   };

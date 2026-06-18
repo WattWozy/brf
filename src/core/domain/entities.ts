@@ -76,6 +76,7 @@ export interface Bid {
   priceSek: number;
   estimatedDays: number | null;
   message: string | null;
+  businessId: string | null;
   createdAt: Date;
 }
 
@@ -100,6 +101,7 @@ export interface Post {
   brfId: string;
   authorId: string;
   createdAt: Date;
+  endDate: Date | null;
 }
 
 export interface BrfDocument {
@@ -115,4 +117,23 @@ export interface Principal {
   userId: string;
   brfId: string;
   role: Role;
+}
+
+export interface Business {
+  id: string;
+  companyName: string;
+  orgNumber: string | null;
+  contactName: string;
+  email: string;
+  phone: string | null;
+  description: string | null;
+  createdAt: Date;
+}
+
+export interface BusinessPrincipal {
+  businessId: string;
+  companyName: string;
+  contactName: string;
+  email: string;
+  phone: string | null;
 }

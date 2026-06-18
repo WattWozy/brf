@@ -7,6 +7,7 @@ import type {
   Booking,
   Brf,
   BrfDocument,
+  Business,
   Issue,
   IssueStatus,
   Job,
@@ -19,13 +20,17 @@ import type {
 } from "@/core/domain/entities";
 import type {
   BidRepository,
+  BidWithJob,
   BookingRepository,
   BrfRepository,
+  BusinessRepository,
   DocumentRepository,
   IssueRepository,
   JobRepository,
+  NewBusiness,
   NewUser,
   PostRepository,
+  PublishedJobSummary,
   ResourceRepository,
   UserRepository,
 } from "@/core/ports/repositories";
@@ -212,12 +217,38 @@ export function jobRepository(db: Db = prisma): JobRepository {
       const row = await db.job.findUnique({ where: { publicToken } });
       return row ? toJob(row) : null;
     },
+    async findByIssueId(issueId) {
+      const row = await db.job.findUnique({ where: { issueId } });
+      return row ? toJob(row) : null;
+    },
     async listByBrf(brfId) {
       const rows = await db.job.findMany({
         where: { brfId },
         orderBy: { createdAt: "desc" },
       });
       return rows.map(toJob);
+    },
+    async listPublished(filter) {
+      const rows = await db.job.findMany({
+        where: {
+          status: "PUBLICERAT",
+          ...(filter.category ? { category: filter.category } : {}),
+          ...(filter.priority ? { priority: filter.priority } : {}),
+        },
+        include: { brf: { select: { name: true } } },
+        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+      });
+      return rows.map((r): PublishedJobSummary => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        category: r.category as JobCategory,
+        priority: r.priority as JobPriority,
+        deadline: r.deadline,
+        createdAt: r.createdAt,
+        brfName: r.brf.name,
+        brfId: r.brfId,
+      }));
     },
     async updateStatus(id, status) {
       const row = await db.job.update({ where: { id }, data: { status } });
@@ -243,6 +274,7 @@ function toBid(row: {
   priceSek: number;
   estimatedDays: number | null;
   message: string | null;
+  businessId: string | null;
   createdAt: Date;
 }): Bid {
   return {
@@ -255,6 +287,7 @@ function toBid(row: {
     priceSek: row.priceSek,
     estimatedDays: row.estimatedDays,
     message: row.message,
+    businessId: row.businessId,
     createdAt: row.createdAt,
   };
 }
@@ -262,7 +295,19 @@ function toBid(row: {
 export function bidRepository(db: Db = prisma): BidRepository {
   return {
     async create(data) {
-      const row = await db.bid.create({ data });
+      const row = await db.bid.create({
+        data: {
+          jobId: data.jobId,
+          companyName: data.companyName,
+          contactName: data.contactName,
+          contactEmail: data.contactEmail,
+          contactPhone: data.contactPhone,
+          priceSek: data.priceSek,
+          estimatedDays: data.estimatedDays,
+          message: data.message,
+          ...(data.businessId ? { businessId: data.businessId } : {}),
+        },
+      });
       return toBid(row);
     },
     async findById(id) {
@@ -275,6 +320,24 @@ export function bidRepository(db: Db = prisma): BidRepository {
         orderBy: { priceSek: "asc" },
       });
       return rows.map(toBid);
+    },
+    async listByBusiness(businessId) {
+      const rows = await db.bid.findMany({
+        where: { businessId },
+        include: {
+          job: { select: { title: true, status: true, awardedBidId: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      return rows.map((r): BidWithJob => ({
+        ...toBid(r),
+        jobTitle: r.job.title,
+        jobStatus: r.job.status as JobStatus,
+        jobAwardedBidId: r.job.awardedBidId,
+      }));
+    },
+    async delete(id) {
+      await db.bid.delete({ where: { id } });
     },
   };
 }
@@ -355,6 +418,7 @@ export function postRepository(db: Db = prisma): PostRepository {
     brfId: string;
     authorId: string;
     createdAt: Date;
+    endDate: Date | null;
   }): Post => ({
     id: row.id,
     title: row.title,
@@ -362,6 +426,7 @@ export function postRepository(db: Db = prisma): PostRepository {
     brfId: row.brfId,
     authorId: row.authorId,
     createdAt: row.createdAt,
+    endDate: row.endDate,
   });
   return {
     async create(data) {
@@ -369,11 +434,58 @@ export function postRepository(db: Db = prisma): PostRepository {
       return toPost(row);
     },
     async listByBrf(brfId) {
+      const now = new Date();
       const rows = await db.post.findMany({
-        where: { brfId },
+        where: {
+          brfId,
+          OR: [{ endDate: null }, { endDate: { gte: now } }],
+        },
         orderBy: { createdAt: "desc" },
       });
       return rows.map(toPost);
+    },
+    async delete(id) {
+      await db.post.delete({ where: { id } });
+    },
+  };
+}
+
+function toBusiness(row: {
+  id: string;
+  companyName: string;
+  orgNumber: string | null;
+  contactName: string;
+  email: string;
+  phone: string | null;
+  description: string | null;
+  createdAt: Date;
+}): Business {
+  return {
+    id: row.id,
+    companyName: row.companyName,
+    orgNumber: row.orgNumber,
+    contactName: row.contactName,
+    email: row.email,
+    phone: row.phone,
+    description: row.description,
+    createdAt: row.createdAt,
+  };
+}
+
+export function businessRepository(db: Db = prisma): BusinessRepository {
+  return {
+    async create(data: NewBusiness) {
+      const row = await db.business.create({ data });
+      return toBusiness(row);
+    },
+    async findByEmail(email) {
+      const row = await db.business.findUnique({ where: { email } });
+      if (!row) return null;
+      return { ...toBusiness(row), passwordHash: row.passwordHash };
+    },
+    async findById(id) {
+      const row = await db.business.findUnique({ where: { id } });
+      return row ? toBusiness(row) : null;
     },
   };
 }

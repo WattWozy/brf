@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { JobCategory, JobPriority, JobStatus } from "@/core/domain/entities";
 import {
   awardBid,
+  createAndPublishJob,
   createJob,
   publishJob,
   setJobStatus,
@@ -42,6 +43,28 @@ export async function publishJobAction(
     await publishJob(getContext(), principal, jobId);
     revalidatePath(`/app/uppdrag/${jobId}`);
     revalidatePath("/app/uppdrag");
+    revalidatePath("/foretag/uppdrag");
+  });
+}
+
+export async function createAndPublishJobAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  return run(async () => {
+    const principal = await requireBoard();
+    const f = fields(formData, ["title", "description", "category", "priority", "deadline", "issueId"]);
+    await createAndPublishJob(getContext(), principal, {
+      title: f.title,
+      description: f.description,
+      category: (f.category || "ANNAT") as JobCategory,
+      priority: (f.priority || "MEDEL") as JobPriority,
+      deadline: f.deadline ? new Date(f.deadline) : null,
+      issueId: f.issueId || undefined,
+    });
+    revalidatePath("/app/uppdrag");
+    revalidatePath("/app/felanmalan");
+    revalidatePath("/foretag/uppdrag");
   });
 }
 

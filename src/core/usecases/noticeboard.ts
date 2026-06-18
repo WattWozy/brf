@@ -6,7 +6,7 @@ import type { UseCaseContext } from "./context";
 export async function createPost(
   ctx: UseCaseContext,
   principal: Principal,
-  input: { title: string; body: string },
+  input: { title: string; body: string; endDate?: Date | null },
 ): Promise<Post> {
   if (principal.role !== "STYRELSE") {
     throw new ForbiddenError("Endast styrelsen kan publicera anslag.");
@@ -22,7 +22,19 @@ export async function createPost(
     body: input.body.trim(),
     brfId: principal.brfId,
     authorId: principal.userId,
+    endDate: input.endDate ?? null,
   });
+}
+
+export async function deletePost(
+  ctx: UseCaseContext,
+  principal: Principal,
+  postId: string,
+): Promise<void> {
+  if (principal.role !== "STYRELSE") {
+    throw new ForbiddenError("Endast styrelsen kan ta bort anslag.");
+  }
+  await ctx.posts.delete(postId);
 }
 
 export async function listPosts(

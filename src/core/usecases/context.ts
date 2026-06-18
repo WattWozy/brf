@@ -6,6 +6,7 @@ import type {
   BidRepository,
   BookingRepository,
   BrfRepository,
+  BusinessRepository,
   DocumentRepository,
   IssueRepository,
   JobRepository,
@@ -25,6 +26,7 @@ export interface UseCaseContext {
   bookings: BookingRepository;
   posts: PostRepository;
   documents: DocumentRepository;
+  businesses: BusinessRepository;
   hasher: PasswordHasher;
   tokens: TokenGenerator;
 }

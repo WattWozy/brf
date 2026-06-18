@@ -1,4 +1,5 @@
 import type { Job, JobCategory, JobPriority, Principal } from "../domain/entities";
+import type { PublishedJobSummary } from "../ports/repositories";
 import {
   ConflictError,
   ForbiddenError,
@@ -61,6 +62,26 @@ export async function createJob(
   return job;
 }
 
+/**
+ * Creates a job and immediately publishes it in one step.
+ * Used by the board when they want to push straight to the business portal.
+ */
+export async function createAndPublishJob(
+  ctx: UseCaseContext,
+  principal: Principal,
+  input: {
+    title: string;
+    description: string;
+    category: JobCategory;
+    priority: JobPriority;
+    deadline?: Date | null;
+    issueId?: string;
+  },
+): Promise<Job> {
+  const job = await createJob(ctx, principal, input);
+  return ctx.jobs.updateStatus(job.id, "PUBLICERAT");
+}
+
 /** Publishing makes the public bid link live. */
 export async function publishJob(
   ctx: UseCaseContext,
@@ -121,6 +142,26 @@ export async function setJobStatus(
   assertBoard(principal);
   await loadOwnedJob(ctx, principal, jobId);
   return ctx.jobs.updateStatus(jobId, status);
+}
+
+/** Public: any authenticated business can browse published jobs. */
+export async function listPublishedJobs(
+  ctx: UseCaseContext,
+  filter: { category?: JobCategory; priority?: JobPriority },
+): Promise<PublishedJobSummary[]> {
+  return ctx.jobs.listPublished(filter);
+}
+
+/** Public: get a single published job by id for business portal bid form. */
+export async function getPublishedJob(
+  ctx: UseCaseContext,
+  jobId: string,
+): Promise<Job> {
+  const job = await ctx.jobs.findById(jobId);
+  if (!job || job.status !== "PUBLICERAT") {
+    throw new NotFoundError("Uppdraget hittades inte eller tar inte emot bud.");
+  }
+  return job;
 }
 
 async function loadOwnedJob(

@@ -6,6 +6,7 @@ import type {
   Booking,
   Brf,
   BrfDocument,
+  Business,
   Issue,
   IssueStatus,
   Job,
@@ -17,6 +18,18 @@ import type {
   Role,
   User,
 } from "../domain/entities";
+
+export interface PublishedJobSummary {
+  id: string;
+  title: string;
+  description: string;
+  category: JobCategory;
+  priority: JobPriority;
+  deadline: Date | null;
+  createdAt: Date;
+  brfName: string;
+  brfId: string;
+}
 
 export interface NewUser {
   email: string;
@@ -66,9 +79,20 @@ export interface JobRepository {
   }): Promise<Job>;
   findById(id: string): Promise<Job | null>;
   findByPublicToken(token: string): Promise<Job | null>;
+  findByIssueId(issueId: string): Promise<Job | null>;
   listByBrf(brfId: string): Promise<Job[]>;
+  listPublished(filter: {
+    category?: JobCategory;
+    priority?: JobPriority;
+  }): Promise<PublishedJobSummary[]>;
   updateStatus(id: string, status: JobStatus): Promise<Job>;
   award(jobId: string, bidId: string): Promise<Job>;
+}
+
+export interface BidWithJob extends Bid {
+  jobTitle: string;
+  jobStatus: JobStatus;
+  jobAwardedBidId: string | null;
 }
 
 export interface BidRepository {
@@ -81,9 +105,28 @@ export interface BidRepository {
     priceSek: number;
     estimatedDays: number | null;
     message: string | null;
+    businessId?: string | null;
   }): Promise<Bid>;
   findById(id: string): Promise<Bid | null>;
   listByJob(jobId: string): Promise<Bid[]>;
+  listByBusiness(businessId: string): Promise<BidWithJob[]>;
+  delete(id: string): Promise<void>;
+}
+
+export interface NewBusiness {
+  companyName: string;
+  orgNumber: string | null;
+  contactName: string;
+  email: string;
+  passwordHash: string;
+  phone: string | null;
+  description: string | null;
+}
+
+export interface BusinessRepository {
+  create(data: NewBusiness): Promise<Business>;
+  findByEmail(email: string): Promise<(Business & { passwordHash: string }) | null>;
+  findById(id: string): Promise<Business | null>;
 }
 
 export interface ResourceRepository {
@@ -114,8 +157,10 @@ export interface PostRepository {
     body: string;
     brfId: string;
     authorId: string;
+    endDate?: Date | null;
   }): Promise<Post>;
   listByBrf(brfId: string): Promise<Post[]>;
+  delete(id: string): Promise<void>;
 }
 
 export interface DocumentRepository {

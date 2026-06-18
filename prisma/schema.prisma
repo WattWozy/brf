@@ -139,9 +139,27 @@ model Bid {
   job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
   jobId String
 
+  business   Business? @relation(fields: [businessId], references: [id])
+  businessId String?
+
   awardedFor Job? @relation("AwardedBid")
 
   @@index([jobId])
+  @@index([businessId])
+}
+
+model Business {
+  id           String   @id @default(cuid())
+  companyName  String
+  orgNumber    String?
+  contactName  String
+  email        String   @unique
+  passwordHash String
+  phone        String?
+  description  String?
+  createdAt    DateTime @default(now())
+
+  bids Bid[]
 }
 
 model Resource {
@@ -173,10 +191,11 @@ model Booking {
 }
 
 model Post {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   title     String
   body      String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  endDate   DateTime?
 
   brf   Brf    @relation(fields: [brfId], references: [id], onDelete: Cascade)
   brfId String

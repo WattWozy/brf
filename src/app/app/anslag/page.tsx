@@ -2,6 +2,7 @@ import { requireSession } from "@/app/lib/auth";
 import { ActionForm } from "@/app/components/action-form";
 import { Card, EmptyState, Field, PageHeader } from "@/app/components/ui";
 import { addDocumentAction, createPostAction } from "@/app/actions/noticeboard";
+import { DeletePostButton } from "./delete-post-button";
 import { listDocuments, listPosts } from "@/core/usecases/noticeboard";
 import { getContext } from "@/infra/container";
 
@@ -31,6 +32,7 @@ export default async function NoticeboardPage() {
             <ActionForm action={createPostAction} submitLabel="Publicera">
               <Field label="Rubrik" name="title" required />
               <Field label="Text" name="body" required textarea />
+              <Field label="Gäller till (valfritt)" name="endDate" type="date" />
             </ActionForm>
           </Card>
           <Card>
@@ -41,7 +43,7 @@ export default async function NoticeboardPage() {
               variant="secondary"
             >
               <Field label="Titel" name="title" required placeholder="Årsredovisning 2025" />
-              <Field label="Länk (URL)" name="url" type="url" required placeholder="https://…" />
+              <Field label="Länk (URL) (t.ex Google Drive länk)" name="url" type="url" required placeholder="https://…" />
             </ActionForm>
           </Card>
         </div>
@@ -55,13 +57,19 @@ export default async function NoticeboardPage() {
           ) : (
             posts.map((post) => (
               <Card key={post.id}>
-                <h3 className="font-medium">{post.title}</h3>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-medium">{post.title}</h3>
+                  {isBoard && <DeletePostButton postId={post.id} />}
+                </div>
                 <p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">
                   {post.body}
                 </p>
                 <p className="mt-2 text-xs text-slate-400">
                   {nameById.get(post.authorId) ?? "Styrelsen"} ·{" "}
                   {post.createdAt.toLocaleDateString("sv-SE")}
+                  {post.endDate && (
+                    <> · Gäller till {post.endDate.toLocaleDateString("sv-SE")}</>
+                  )}
                 </p>
               </Card>
             ))

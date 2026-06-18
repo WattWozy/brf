@@ -1,6 +1,8 @@
 "use server";
 
-import { submitBid } from "@/core/usecases/bids";
+import { revalidatePath } from "next/cache";
+import { confirmBid, submitBid } from "@/core/usecases/bids";
+import { requireSession } from "@/app/lib/auth";
 import { getContext } from "@/infra/container";
 import { type ActionState, fields, run } from "@/app/lib/action";
 
@@ -32,5 +34,18 @@ export async function submitBidAction(
       message: f.message,
     });
     return { ok: true };
+  });
+}
+
+export async function confirmBidAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  return run(async () => {
+    const principal = await requireSession();
+    const f = fields(formData, ["issueId", "bidId"]);
+    await confirmBid(getContext(), principal, f.issueId, f.bidId);
+    revalidatePath("/app/felanmalan");
+    revalidatePath("/foretag/uppdrag");
   });
 }
