@@ -93,3 +93,6 @@ next-env.d.ts
 # Operating System Files
 .DS_Store
 Thumbs.db
+
+#env
+.env

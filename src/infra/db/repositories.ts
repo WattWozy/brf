@@ -27,6 +27,7 @@ import type {
   ResourceRepository,
   UserRepository,
 } from "@/core/ports/repositories";
+import { ConflictError } from "@/core/domain/errors";
 import { prisma } from "./client";
 
 type Db = typeof prisma;
@@ -182,8 +183,20 @@ function toJob(row: {
 export function jobRepository(db: Db = prisma): JobRepository {
   return {
     async create(data) {
-      const row = await db.job.create({ data });
-      return toJob(row);
+      try {
+        const row = await db.job.create({ data });
+        return toJob(row);
+      } catch (e: unknown) {
+        if (
+          e instanceof Error &&
+          "code" in e &&
+          (e as { code: string }).code === "P2002" &&
+          data.issueId
+        ) {
+          throw new ConflictError("Felanmälan har redan ett kopplat uppdrag.");
+        }
+        throw e;
+      }
     },
     async findById(id) {
       const row = await db.job.findUnique({ where: { id } });
