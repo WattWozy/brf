@@ -30,6 +30,23 @@ enum JobStatus {
   KLART
 }
 
+enum JobCategory {
+  HANTVERK
+  RORMOKARARBETE
+  RENOVERING
+  EL
+  TRADGARD
+  BASTU
+  NATVERK
+  ANNAT
+}
+
+enum JobPriority {
+  LAG
+  MEDEL
+  HOG
+}
+
 model Brf {
   id        String     @id @default(cuid())
   name      String
@@ -87,8 +104,10 @@ model Job {
   id          String    @id @default(cuid())
   title       String
   description String
-  status      JobStatus @default(UTKAST)
-  publicToken String    @unique // hemlig länk för hantverkare att lägga bud
+  status      JobStatus   @default(UTKAST)
+  category    JobCategory @default(ANNAT)
+  priority    JobPriority @default(MEDEL)
+  publicToken String      @unique // hemlig länk för hantverkare att lägga bud
   deadline    DateTime?
   createdAt   DateTime  @default(now())
 

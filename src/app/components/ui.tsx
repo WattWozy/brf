@@ -38,6 +38,41 @@ export function PageHeader({
   );
 }
 
+export const CATEGORY_LABELS: Record<string, string> = {
+  HANTVERK: "Hantverk",
+  RORMOKARARBETE: "Rörmokeri",
+  RENOVERING: "Renovering",
+  EL: "El",
+  TRADGARD: "Trädgård",
+  BASTU: "Bastu",
+  NATVERK: "Nätverk",
+  ANNAT: "Annat",
+};
+
+export const PRIORITY_STYLES: Record<string, string> = {
+  LAG: "bg-slate-100 text-slate-600",
+  MEDEL: "bg-amber-100 text-amber-800",
+  HOG: "bg-red-100 text-red-800",
+};
+
+export const PRIORITY_LABELS: Record<string, string> = {
+  LAG: "Låg prio",
+  MEDEL: "Medel prio",
+  HOG: "Hög prio",
+};
+
+export function PriorityBadge({ priority }: { priority: string }) {
+  return (
+    <span
+      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+        PRIORITY_STYLES[priority] ?? "bg-slate-100 text-slate-600"
+      }`}
+    >
+      {PRIORITY_LABELS[priority] ?? priority}
+    </span>
+  );
+}
+
 const STATUS_STYLES: Record<string, string> = {
   INKOMMEN: "bg-amber-100 text-amber-800",
   TRIAGE: "bg-blue-100 text-blue-800",
@@ -79,6 +114,38 @@ export function EmptyState({ children }: { children: ReactNode }) {
     <p className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
       {children}
     </p>
+  );
+}
+
+export function Select({
+  label,
+  name,
+  required = false,
+  defaultValue,
+  options,
+}: {
+  label: string;
+  name: string;
+  required?: boolean;
+  defaultValue?: string;
+  options: { value: string; label: string }[];
+}) {
+  const cls =
+    "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 bg-white";
+  return (
+    <label className="block">
+      <span className="mb-1 block text-sm font-medium text-slate-700">
+        {label}
+        {required && <span className="text-red-500"> *</span>}
+      </span>
+      <select name={name} required={required} defaultValue={defaultValue} className={cls}>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 

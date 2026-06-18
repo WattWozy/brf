@@ -1,4 +1,4 @@
-import type { Job, Principal } from "../domain/entities";
+import type { Job, JobCategory, JobPriority, Principal } from "../domain/entities";
 import {
   ConflictError,
   ForbiddenError,
@@ -23,6 +23,8 @@ export async function createJob(
   input: {
     title: string;
     description: string;
+    category: JobCategory;
+    priority: JobPriority;
     deadline?: Date | null;
     issueId?: string;
   },
@@ -45,6 +47,8 @@ export async function createJob(
   const job = await ctx.jobs.create({
     title: input.title.trim(),
     description: input.description.trim(),
+    category: input.category,
+    priority: input.priority,
     publicToken: ctx.tokens.generate(),
     deadline: input.deadline ?? null,
     brfId: principal.brfId,

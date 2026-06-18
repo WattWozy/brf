@@ -1,7 +1,7 @@
 import { requireSession } from "@/app/lib/auth";
 import { ActionForm } from "@/app/components/action-form";
 import { InlineAction } from "@/app/components/inline-action";
-import { Card, EmptyState, Field, PageHeader, StatusBadge } from "@/app/components/ui";
+import { Card, EmptyState, Field, PageHeader, Select, StatusBadge } from "@/app/components/ui";
 import { reportIssueAction, setIssueStatusAction } from "@/app/actions/issues";
 import { createJobAction } from "@/app/actions/jobs";
 import { listIssues } from "@/core/usecases/issues";
@@ -70,16 +70,40 @@ export default async function IssuesPage() {
                     variant="danger"
                     hidden={{ issueId: issue.id, status: "AVFARDAD" }}
                   />
-                  <InlineAction
-                    action={createJobAction}
-                    label="Skapa uppdrag →"
-                    variant="primary"
-                    hidden={{
-                      issueId: issue.id,
-                      title: issue.title,
-                      description: issue.description,
-                    }}
-                  />
+                  {issue.status !== "TRIAGE" && <ActionForm action={createJobAction} submitLabel="Skapa uppdrag →" variant="primary" className="w-full pt-1">
+                    <input type="hidden" name="issueId" value={issue.id} />
+                    <input type="hidden" name="title" value={issue.title} />
+                    <input type="hidden" name="description" value={issue.description} />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Select
+                        label="Kategori"
+                        name="category"
+                        required
+                        defaultValue="ANNAT"
+                        options={[
+                          { value: "HANTVERK", label: "Hantverk" },
+                          { value: "RORMOKARARBETE", label: "Rörmokeri" },
+                          { value: "RENOVERING", label: "Renovering" },
+                          { value: "EL", label: "El" },
+                          { value: "TRADGARD", label: "Trädgård" },
+                          { value: "BASTU", label: "Bastu" },
+                          { value: "NATVERK", label: "Nätverk" },
+                          { value: "ANNAT", label: "Annat" },
+                        ]}
+                      />
+                      <Select
+                        label="Prioritet"
+                        name="priority"
+                        required
+                        defaultValue="MEDEL"
+                        options={[
+                          { value: "LAG", label: "Låg" },
+                          { value: "MEDEL", label: "Medel" },
+                          { value: "HOG", label: "Hög" },
+                        ]}
+                      />
+                    </div>
+                  </ActionForm>}
                 </div>
               )}
             </Card>

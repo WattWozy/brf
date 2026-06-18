@@ -9,6 +9,8 @@ import type {
   Issue,
   IssueStatus,
   Job,
+  JobCategory,
+  JobPriority,
   JobStatus,
   Post,
   Resource,
@@ -59,6 +61,8 @@ export interface JobRepository {
     deadline: Date | null;
     brfId: string;
     issueId: string | null;
+    category: JobCategory;
+    priority: JobPriority;
   }): Promise<Job>;
   findById(id: string): Promise<Job | null>;
   findByPublicToken(token: string): Promise<Job | null>;

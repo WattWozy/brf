@@ -4,7 +4,7 @@ import { requireBoard } from "@/app/lib/auth";
 import { getBaseUrl } from "@/app/lib/url";
 import { CopyLink } from "@/app/components/copy-link";
 import { InlineAction } from "@/app/components/inline-action";
-import { Card, EmptyState, PageHeader, StatusBadge } from "@/app/components/ui";
+import { Card, CATEGORY_LABELS, EmptyState, PageHeader, PriorityBadge, StatusBadge } from "@/app/components/ui";
 import {
   awardBidAction,
   publishJobAction,
@@ -43,10 +43,18 @@ export default async function JobDetailPage({
 
       <PageHeader
         title={job.title}
-        action={<StatusBadge status={job.status} />}
+        action={
+          <div className="flex items-center gap-2">
+            <PriorityBadge priority={job.priority} />
+            <StatusBadge status={job.status} />
+          </div>
+        }
       />
 
       <Card>
+        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400">
+          {CATEGORY_LABELS[job.category] ?? job.category}
+        </p>
         <p className="whitespace-pre-wrap text-sm text-slate-700">{job.description}</p>
         {job.deadline && (
           <p className="mt-3 text-sm text-slate-500">

@@ -10,6 +10,8 @@ import type {
   Issue,
   IssueStatus,
   Job,
+  JobCategory,
+  JobPriority,
   JobStatus,
   Post,
   Resource,
@@ -159,6 +161,8 @@ function toJob(row: {
   title: string;
   description: string;
   status: string;
+  category: string;
+  priority: string;
   publicToken: string;
   deadline: Date | null;
   brfId: string;
@@ -171,6 +175,8 @@ function toJob(row: {
     title: row.title,
     description: row.description,
     status: row.status as JobStatus,
+    category: row.category as JobCategory,
+    priority: row.priority as JobPriority,
     publicToken: row.publicToken,
     deadline: row.deadline,
     brfId: row.brfId,

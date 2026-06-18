@@ -12,6 +12,18 @@ export type JobStatus =
   | "PAGAR"
   | "KLART";
 
+export type JobCategory =
+  | "HANTVERK"
+  | "RORMOKARARBETE"
+  | "RENOVERING"
+  | "EL"
+  | "TRADGARD"
+  | "BASTU"
+  | "NATVERK"
+  | "ANNAT";
+
+export type JobPriority = "LAG" | "MEDEL" | "HOG";
+
 export interface Brf {
   id: string;
   name: string;
@@ -44,6 +56,8 @@ export interface Job {
   title: string;
   description: string;
   status: JobStatus;
+  category: JobCategory;
+  priority: JobPriority;
   publicToken: string;
   deadline: Date | null;
   brfId: string;

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { JobStatus } from "@/core/domain/entities";
+import type { JobCategory, JobPriority, JobStatus } from "@/core/domain/entities";
 import {
   awardBid,
   createJob,
@@ -18,10 +18,12 @@ export async function createJobAction(
 ): Promise<ActionState> {
   return run(async () => {
     const principal = await requireBoard();
-    const f = fields(formData, ["title", "description", "deadline", "issueId"]);
+    const f = fields(formData, ["title", "description", "category", "priority", "deadline", "issueId"]);
     await createJob(getContext(), principal, {
       title: f.title,
       description: f.description,
+      category: (f.category || "ANNAT") as JobCategory,
+      priority: (f.priority || "MEDEL") as JobPriority,
       deadline: f.deadline ? new Date(f.deadline) : null,
       issueId: f.issueId || undefined,
     });
