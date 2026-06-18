@@ -1,0 +1,25 @@
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+
+// Prisma 7 connects through a driver adapter. PrismaPg manages its own pg pool
+// from the connection string. A single client is reused across hot reloads in
+// dev to avoid exhausting connections.
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+};
+
+function createClient(): PrismaClient {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL saknas.");
+  }
+  const adapter = new PrismaPg(connectionString);
+  return new PrismaClient({ adapter });
+}
+
+export const prisma: PrismaClient =
+  globalForPrisma.prisma ?? createClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}

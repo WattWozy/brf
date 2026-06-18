@@ -39,3 +39,57 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Next.js Build Outputs
+/.next/
+/out/
+/build
+
+# Production env files MUST be kept out of source control
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Prisma specific
+/prisma/.env.local
+/prisma/migrations/**/*.sql
+# If you use a local SQLite database for development:
+*.db
+*.db-journal
+
+# Vercel
+.vercel
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript
+.tsbuildinfo
+next-env.d.ts
+
+# Testing (Jest, Cypress, etc.)
+/coverage
+/.nyc_output
+/.cypress
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Operating System Files
+.DS_Store
+Thumbs.db

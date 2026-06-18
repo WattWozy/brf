@@ -1,0 +1,181 @@
+// Prisma schema for the BRF platform.
+// The DB is an *implementation detail* — the domain (src/core) never imports this.
+// Adapters in src/infra/db map between these models and domain entities.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STYRELSE
+  BOENDE
+}
+
+enum IssueStatus {
+  INKOMMEN
+  TRIAGE
+  AVFARDAD
+  ATGARDAD
+}
+
+enum JobStatus {
+  UTKAST
+  PUBLICERAT
+  TILLDELAT
+  PAGAR
+  KLART
+}
+
+model Brf {
+  id        String     @id @default(cuid())
+  name      String
+  orgNumber String?
+  createdAt DateTime   @default(now())
+
+  users     User[]
+  issues    Issue[]
+  jobs      Job[]
+  resources Resource[]
+  posts     Post[]
+  documents Document[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(BOENDE)
+  apartment    String?
+  createdAt    DateTime @default(now())
+
+  brf   Brf    @relation(fields: [brfId], references: [id], onDelete: Cascade)
+  brfId String
+
+  issues   Issue[]
+  bookings Booking[]
+  posts    Post[]
+
+  @@index([brfId])
+}
+
+model Issue {
+  id          String      @id @default(cuid())
+  title       String
+  description String
+  location    String?
+  imageUrl    String?
+  status      IssueStatus @default(INKOMMEN)
+  createdAt   DateTime    @default(now())
+
+  brf   Brf    @relation(fields: [brfId], references: [id], onDelete: Cascade)
+  brfId String
+
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+
+  job Job?
+
+  @@index([brfId])
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  status      JobStatus @default(UTKAST)
+  publicToken String    @unique // hemlig länk för hantverkare att lägga bud
+  deadline    DateTime?
+  createdAt   DateTime  @default(now())
+
+  brf   Brf    @relation(fields: [brfId], references: [id], onDelete: Cascade)
+  brfId String
+
+  // ett uppdrag kan ha sitt ursprung i en felanmälan (valfritt)
+  issue   Issue?  @relation(fields: [issueId], references: [id])
+  issueId String? @unique
+
+  bids          Bid[]
+  awardedBid    Bid?    @relation("AwardedBid", fields: [awardedBidId], references: [id])
+  awardedBidId  String? @unique
+
+  @@index([brfId])
+}
+
+model Bid {
+  id            String   @id @default(cuid())
+  companyName   String
+  contactName   String
+  contactEmail  String
+  contactPhone  String?
+  priceSek      Int // pris i hela kronor
+  estimatedDays Int?
+  message       String?
+  createdAt     DateTime @default(now())
+
+  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId String
+
+  awardedFor Job? @relation("AwardedBid")
+
+  @@index([jobId])
+}
+
+model Resource {
+  id        String    @id @default(cuid())
+  name      String
+  createdAt DateTime  @default(now())
+
+  brf   Brf    @relation(fields: [brfId], references: [id], onDelete: Cascade)
+  brfId String
+
+  bookings Booking[]
+
+  @@index([brfId])
+}
+
+model Booking {
+  id        String   @id @default(cuid())
+  startTime DateTime
+  endTime   DateTime
+  createdAt DateTime @default(now())
+
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  resourceId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([resourceId, startTime])
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+
+  brf   Brf    @relation(fields: [brfId], references: [id], onDelete: Cascade)
+  brfId String
+
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+
+  @@index([brfId])
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  title     String
+  url       String
+  createdAt DateTime @default(now())
+
+  brf   Brf    @relation(fields: [brfId], references: [id], onDelete: Cascade)
+  brfId String
+
+  @@index([brfId])
+}
